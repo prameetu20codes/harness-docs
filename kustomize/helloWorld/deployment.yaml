@@ -29,5 +29,5 @@ spec:
         - name: ENABLE_RISKY
           valueFrom:
             configMapKeyRef:
-              name: the-map
+              name: app-config
               key: enableRisky
