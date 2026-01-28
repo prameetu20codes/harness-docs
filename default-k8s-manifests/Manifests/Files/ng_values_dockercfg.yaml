@@ -2,7 +2,7 @@ name: harness-quickstart
 replicas: 1
 
 image:  <+artifact.image>
-dockercfg: <+artifact.imagePullSecret1>
+#dockercfg: <+artifact.imagePullSecret1>
 
 createNamespace: true
 namespace: <+infra.namespace>
