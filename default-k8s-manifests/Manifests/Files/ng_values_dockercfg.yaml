@@ -7,7 +7,6 @@ dockercfg: <+artifact.imagePullSecret1>
 createNamespace: true
 namespace: <+infra.namespace>
 
-myjsonval: <+configFile.getAsBase64('myjson')>
 # Service Type allow you to specify what kind of service you want.
 # Possible values for ServiceType are:
 # ClusterIP | NodePort | LoadBalancer | ExternalName
@@ -24,6 +23,6 @@ serviceTargetPort: 80
 # Both are added to the container environment in podSpec as envFrom source.
 env:
   config:
-    key1: <+serviceVariables.dynamic_name_2>
+    key1: prameet
   secrets:
-    key2: <+serviceVariables.dynamic_name_3>
+    key2: prameet
