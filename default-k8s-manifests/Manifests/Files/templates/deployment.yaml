@@ -53,7 +53,7 @@ spec:
       {{- end}}
       containers:
       - name: {{.Values.name}}
-        image: {{ .Values.image | default "library/nginx:trixie-perl" }}
+        image: {{ .Values.image | default "registry.hub.docker.com/library/nginx:trixie-perl" }}
         {{- if or .Values.env.config .Values.env.secrets}}
         envFrom:
         {{- if .Values.env.config}}
