@@ -1,12 +1,10 @@
 name: harness-quickstart
 replicas: 1
 
-image:  <+artifact.image>
-dockercfg: <+artifact.imagePullSecret>
+image: registry.hub.docker.com/library/nginx:stable-perl
 
 createNamespace: true
-namespace: <+infra.namespace>
-
+namespace: default
 # Service Type allow you to specify what kind of service you want.
 # Possible values for ServiceType are:
 # ClusterIP | NodePort | LoadBalancer | ExternalName
