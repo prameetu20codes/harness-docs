@@ -1,7 +1,7 @@
 name: harness-quickstart
 replicas: 1
 
-image: registry.hub.docker.com/library/nginx:stable-perl
+image: registry.hub.docker.com/library/nginx:trixie-otel
 
 createNamespace: true
 namespace: default
