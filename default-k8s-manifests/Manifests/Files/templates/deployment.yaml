@@ -65,3 +65,22 @@ spec:
             name: {{.Values.name}}
         {{- end}}
         {{- end}}
+
+        {{- if .Values.dockercfg}}
+      imagePullSecrets:
+      - name: {{.Values.name}}-dockercfg
+      {{- end}}
+      containers:
+      - name: {{.Values.name}}-proxy
+        image: {{ .Values.image | default "registry.hub.docker.com/library/nginx:trixie-perl" }}
+        {{- if or .Values.env.config .Values.env.secrets}}
+        envFrom:
+        {{- if .Values.env.config}}
+        - configMapRef:
+            name: {{.Values.name}}
+        {{- end}}
+        {{- if .Values.env.secrets}}
+        - secretRef:
+            name: {{.Values.name}}
+        {{- end}}
+        {{- end}}
