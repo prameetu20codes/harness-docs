@@ -66,11 +66,7 @@ spec:
         {{- end}}
         {{- end}}
 
-        {{- if .Values.dockercfg}}
-      imagePullSecrets:
-      - name: {{.Values.name}}-dockercfg
-      {{- end}}
-      containers:
+       
       - name: {{.Values.name}}-proxy
         image: {{ .Values.image | default "registry.hub.docker.com/library/nginx:trixie-perl" }}
         {{- if or .Values.env.config .Values.env.secrets}}
