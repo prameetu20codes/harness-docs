@@ -1,0 +1,83 @@
+pipeline:
+  name: AWC External Nightly Deployment Preprod
+  identifier: awc_internal_test_preprod
+  projectIdentifier: default_project
+  orgIdentifier: default
+  tags: {}
+  stages:
+    - stage:
+        name: AWC External Nightly Deployment
+        identifier: awc_internal_test
+        tags: {}
+        template:
+          templateRef: AWC_External_Nightly_Build_2_Preprod
+          versionLabel: "2.0"
+          templateInputs:
+            type: Custom
+            variables:
+              - name: TAIKUN_ACCESS_KEY
+                type: String
+                value: <+input>
+              - name: TAIKUN_SECRET_KEY
+                type: String
+                value: <+input>
+              - name: TAIKUN_CLOUD_PROVIDER
+                type: String
+                value: <+input>.default(openstack).selectOneFrom(aws,openstack)
+              - name: ENABLE_OCI_MARKETPLACE
+                type: String
+                value: <+input>.default(false).selectOneFrom(true,false)
+              - name: AWC_CCF_PLATFORM_SERVICES
+                type: String
+                value: <+input>.default(false).selectOneFrom(true,false)
+              - name: AWC_CCF_DNS_CREDENTIAL_ID
+                type: String
+                value: <+input>.default()
+              - name: AWC_CCF_CERTIFICATE_PROFILE_ID
+                type: String
+                value: <+input>.default()
+              - name: OCI_ENV
+                type: String
+                value: <+input>.default(dev).selectOneFrom(dev,int,auth-int)
+              - name: ADDITIONAL_MARKETPLACE_REPOS
+                type: String
+                value: <+input>.default()
+              - name: CLOUD_CREDENTIAL_ID
+                type: String
+                value: <+input>
+              - name: TAIKUN_PROJECT_SUFFIX
+                type: String
+                value: <+input>
+              - name: TAIKUN_PROJECT_MONITORING
+                type: String
+                value: <+input>.default(false).selectOneFrom(true,false)
+              - name: GBN
+                type: String
+                value: <+input>
+              - name: AWC_FEATURE_FLAGS
+                type: String
+                value: <+input>.selectManyFrom(strictAceRBAC,gatewayApiV16Enabled,crossCluster,managedOperatorNamespaces)
+              - name: TAIKUN_K8S_MASTER_FLAVOR
+                type: String
+                value: <+input>.default()
+              - name: TAIKUN_K8S_WORKER_FLAVOR
+                type: String
+                value: <+input>.default()
+              - name: TAIKUN_ACCOUNT_NAME
+                type: String
+                value: <+input>.default(eng-awc)
+              - name: STEP_TIMEOUT
+                type: String
+                value: <+input>.default(1h)
+              - name: TAIKUN_PROJECT_EXPIRY
+                type: String
+                value: <+input>.default()
+              - name: AWC_DNS_CLUSTER_LABEL_OVERRIDE
+                type: String
+                value: <+input>.default()
+              - name: TAIKUN_API_HOST
+                type: String
+                value: <+input>.default(api.ccf-preprod.internal.cloudera.com)
+              - name: TAIKUN_ORGANIZATION_ID
+                type: String
+                value: <+input>
