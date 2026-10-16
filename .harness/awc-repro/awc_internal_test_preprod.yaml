@@ -81,3 +81,15 @@ pipeline:
               - name: TAIKUN_ORGANIZATION_ID
                 type: String
                 value: <+input>
+              - name: AWC_CORE_REGISTRY_INTERNAL
+                type: String
+                value: <+input>.default()
+              - name: AWC_CORE_REGISTRY_DEFAULT
+                type: String
+                value: <+input>.default()
+              - name: DOCKER_DEV_REPO_USERNAME
+                type: Secret
+                value: <+input>.default()
+              - name: DOCKER_DEV_REPO_PASSWORD
+                type: Secret
+                value: <+input>.default()
