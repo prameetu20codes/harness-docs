@@ -1,99 +1,85 @@
-# Stored with Git Experience at:
-#   harness-docs/.harness/pipelines/app_team_onboarding_register.yaml
-# Runs from trigger .harness/triggers/onboarding_pr_merged.yaml; can also be run by hand.
 pipeline:
   name: App Team Onboarding Register
   identifier: app_team_onboarding_register
-  orgIdentifier: default
-  projectIdentifier: default_project
-  tags:
-    pipeline_type: platform_management
+  projectIdentifier: testproj
+  orgIdentifier: testprameet
   description: |-
     Self-service onboarding, step 2 of 2. Runs when an onboarding PR (branch
-    onboarding/<org>/<project>/<app>) is merged into harness-docs main. Reads the request
-    manifest onboarding/requests/<org>/<project>/<app>.json from main, imports the service,
-    pipeline and input sets from their merged files as remote entities, then creates the trigger
-    from its merged file. Entities that already exist are left unchanged, so a re-run only
-    fills gaps (e.g. after fixing a failed import).
+    onboarding/<org>/<project>/<app>) is merged into main. Reads the request manifest
+    onboarding/requests/<org>/<project>/<app>.json, imports the service, pipeline and input sets
+    from their merged files as remote entities, then creates the trigger from its merged file.
+    Entities that already exist are left unchanged, so a re-run only fills gaps.
+  tags: {}
   stages:
     - stage:
-        name: Register
+        name: register
         identifier: register
-        type: Custom
+        description: ""
+        type: CI
         spec:
+          cloneCodebase: true
+          caching:
+            enabled: false
+            override: false
+            paths: []
+          buildIntelligence:
+            enabled: false
+          platform:
+            os: Windows
+            arch: Amd64
+          runtime:
+            type: Docker
+            spec: {}
           execution:
             steps:
               - step:
-                  type: Queue
-                  name: Queue per request
-                  identifier: queue_request
-                  timeout: 1h
+                  type: Run
+                  name: Import entities and create trigger
+                  identifier: import_entities
                   spec:
-                    key: app-onboarding-register__<+pipeline.variables.request>
-                    scope: Pipeline
-              - stepGroup:
-                  name: Register
-                  identifier: register_sg
-                  stepGroupInfra:
-                    type: KubernetesDirect
-                    spec:
-                      connectorRef: account.k8s_build_cluster
-                      namespace: harness-builds
-                      os: Linux
-                  steps:
-                    - step:
-                        type: GitClone
-                        name: Clone harness-docs main
-                        identifier: clone_repo
-                        timeout: 5m
-                        spec:
-                          connectorRef: <+pipeline.variables.engine_connector>
-                          repoName: <+pipeline.variables.gitx_repo>
-                          build:
-                            type: branch
-                            spec:
-                              branch: <+pipeline.variables.gitx_branch>
-                    - step:
-                        type: Run
-                        name: Import entities and create trigger
-                        identifier: import_entities
-                        timeout: 30m
-                        spec:
-                          connectorRef: account.docker_registry
-                          image: python:3.12-slim
-                          shell: Sh
-                          envVariables:
-                            HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
-                            HARNESS_ACCOUNT_ID: <+account.identifier>
-                            HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
-                            REQUEST: <+pipeline.variables.request>
-                            REPO_DIR: /harness/<+pipeline.variables.gitx_repo>
-                          command: python3 /harness/<+pipeline.variables.gitx_repo>/onboarding/onboard.py register
-        failureStrategies:
-          - onFailure:
-              errors:
-                - AllErrors
-              action:
-                type: Abort
+                    shell: Sh
+                    envVariables:
+                      HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
+                      HARNESS_ACCOUNT_ID: <+account.identifier>
+                      HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
+                      REQUEST: <+pipeline.variables.request>
+                      REPORT_PATH: onboarding-report.json
+                    command: |-
+                      PY=$(command -v python3 || command -v python)
+                      REPO_DIR="$PWD" "$PY" onboarding/onboard.py register
+        variables:
+          - name: HARNESS_CI_INTERNAL_ROUTE_TO_RUNNER
+            type: String
+            description: ""
+            required: false
+            value: "true"
+          - name: HARNESS_CI_INTERNAL_CONTAINERLESS
+            type: String
+            description: ""
+            required: false
+            value: "true"
+        delegateSelectors:
+          - linux-delegate
+  properties:
+    ci:
+      codebase:
+        connectorRef: harnesstesting
+        repoName: harness-docs
+        build:
+          type: branch
+          spec:
+            branch: main
+        sparseCheckout: []
   variables:
     - name: request
       type: String
       description: "<org>/<project>/<app_id>, or the PR branch onboarding/<org>/<project>/<app_id>."
       required: true
       value: <+input>.regex(^(onboarding/)?[A-Za-z_][A-Za-z0-9_]*/[A-Za-z_][A-Za-z0-9_]*/[a-z_][a-z0-9_]*$)
-    - name: gitx_repo
-      type: String
-      value: harness-docs
-    - name: gitx_branch
-      type: String
-      value: main
-    - name: engine_connector
-      type: String
-      value: account.github
     - name: harness_base_url
       type: String
       value: https://app.harness.io/gateway
     - name: harness_api_key
       type: Secret
-      description: Service-account API key with create rights on services, pipelines, input sets and triggers in the onboarded projects.
-      value: account.harness_api_key
+      description: Harness API key with create rights on services, pipelines, input sets and triggers.
+      value: harness_api_key

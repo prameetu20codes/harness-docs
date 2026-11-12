@@ -2,9 +2,9 @@ trigger:
   name: Onboarding PR merged
   identifier: onboarding_pr_merged
   enabled: true
-  description: Registers an app team's onboarding request when its PR into harness-docs main is merged.
-  orgIdentifier: default
-  projectIdentifier: default_project
+  description: Registers an app team's onboarding request when its PR into main is merged.
+  orgIdentifier: testprameet
+  projectIdentifier: testproj
   pipelineIdentifier: app_team_onboarding_register
   pipelineBranchName: main
   tags: {}
@@ -15,7 +15,7 @@ trigger:
       spec:
         type: PullRequest
         spec:
-          connectorRef: account.github
+          connectorRef: harnesstesting
           autoAbortPreviousExecutions: false
           repoName: harness-docs
           payloadConditions:

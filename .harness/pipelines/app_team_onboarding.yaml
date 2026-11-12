@@ -1,192 +1,134 @@
-# Stored with Git Experience at:
-#   harness-docs/.harness/pipelines/app_team_onboarding.yaml
-# The engine it runs must be committed at harness-docs/onboarding/onboard.py
-# (this repo).
 pipeline:
   name: App Team Onboarding
   identifier: app_team_onboarding
-  orgIdentifier: default
-  projectIdentifier: default_project
-  tags:
-    pipeline_type: platform_management
+  projectIdentifier: testproj
+  orgIdentifier: testprameet
   description: |-
-    Self-service onboarding for an app team, step 1 of 2. Renders, for the team's existing
-    project: a Service, a Pipeline that references an approved org pipeline template, one Input
-    Set per environment, and a GitHub push Trigger. Propose commits them to branch
-    onboarding/<org>/<project>/<app> of harness-docs and opens a PR; the PR review is the
-    approval. Nothing is created in Harness here: merging the PR runs
-    app_team_onboarding_register, which imports the merged files as remote entities and creates
-    the trigger. Plan is always read-only; Propose runs only when dry_run=false. Entities that
-    already exist in Harness are left out of the PR, so re-running is safe.
+    Self-service onboarding for an app team, step 1 of 2. Renders a Service, a Pipeline that
+    references an approved pipeline template, one Input Set per environment and a GitHub push
+    Trigger. Plan is read-only. With dry_run=false, Propose commits the files to branch
+    onboarding/<org>/<project>/<app> and opens a PR; merging it runs app_team_onboarding_register.
+  tags: {}
   stages:
     - stage:
-        name: Plan
-        identifier: plan
-        type: Custom
+        name: onboarding
+        identifier: onboarding
+        description: ""
+        type: CI
         spec:
+          cloneCodebase: true
+          caching:
+            enabled: false
+            override: false
+            paths: []
+          buildIntelligence:
+            enabled: false
+          platform:
+            os: Windows
+            arch: Amd64
+          runtime:
+            type: Docker
+            spec: {}
           execution:
             steps:
               - step:
-                  type: Queue
-                  name: Queue per project
-                  identifier: queue_project
-                  timeout: 1h
+                  type: Run
+                  name: Validate and plan
+                  identifier: validate_and_plan
                   spec:
-                    key: app-onboarding__<+pipeline.variables.org_id>__<+pipeline.variables.project_id>
-                    scope: Pipeline
-              - stepGroup:
-                  name: Plan
-                  identifier: plan_sg
-                  stepGroupInfra:
-                    type: KubernetesDirect
-                    spec:
-                      connectorRef: account.k8s_build_cluster
-                      namespace: harness-builds
-                      os: Linux
-                  steps:
-                    - step:
-                        type: GitClone
-                        name: Clone onboarding engine
-                        identifier: clone_engine
-                        timeout: 5m
-                        spec:
-                          connectorRef: <+pipeline.variables.engine_connector>
-                          repoName: <+pipeline.variables.engine_repo>
-                          build:
-                            type: branch
-                            spec:
-                              branch: <+pipeline.variables.engine_branch>
-                    - step:
-                        type: Run
-                        name: Validate and plan
-                        identifier: validate_and_plan
-                        timeout: 15m
-                        spec:
-                          connectorRef: account.docker_registry
-                          image: python:3.12-slim
-                          shell: Sh
-                          envVariables:
-                            HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
-                            HARNESS_ACCOUNT_ID: <+account.identifier>
-                            HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
-                            ORG_ID: <+pipeline.variables.org_id>
-                            PROJECT_ID: <+pipeline.variables.project_id>
-                            APP_NAME: <+pipeline.variables.app_name>
-                            OWNER_EMAIL: <+pipeline.triggeredBy.email>
-                            TEMPLATE_REF: <+pipeline.variables.template_ref>
-                            TEMPLATE_VERSION: <+pipeline.variables.template_version>
-                            DEPLOYMENT_TYPE: <+pipeline.variables.deployment_type>
-                            APP_REPO: <+pipeline.variables.app_repo>
-                            APP_GIT_CONNECTOR: <+pipeline.variables.app_git_connector>
-                            MANIFEST_PATH: <+pipeline.variables.manifest_path>
-                            REGISTRY_CONNECTOR: <+pipeline.variables.registry_connector>
-                            IMAGE_PATH: <+pipeline.variables.image_path>
-                            ENVIRONMENTS: <+pipeline.variables.environments>
-                            INPUT_OVERRIDES: <+pipeline.variables.input_overrides>
-                            CREATE_TRIGGER: <+pipeline.variables.create_trigger>
-                            TRIGGER_BRANCH: <+pipeline.variables.trigger_branch>
-                            GITX_CONNECTOR: <+pipeline.variables.gitx_connector>
-                            GITX_REPO: <+pipeline.variables.gitx_repo>
-                            GITX_BRANCH: <+pipeline.variables.gitx_branch>
-                            GITHUB_TOKEN: <+pipeline.variables.github_token>
-                            GITHUB_OWNER: <+pipeline.variables.github_owner>
-                            GITHUB_API_URL: <+pipeline.variables.github_api_url>
-                          command: python3 /harness/<+pipeline.variables.engine_repo>/onboarding/onboard.py plan
-        failureStrategies:
-          - onFailure:
-              errors:
-                - AllErrors
-              action:
-                type: Abort
-    - stage:
-        name: Propose
-        identifier: propose
-        type: Custom
-        when:
-          pipelineStatus: Success
-          condition: <+pipeline.variables.dry_run> == "false"
-        spec:
-          execution:
-            steps:
+                    shell: Sh
+                    envVariables:
+                      HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
+                      HARNESS_ACCOUNT_ID: <+account.identifier>
+                      HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
+                      ORG_ID: <+pipeline.variables.org_id>
+                      PROJECT_ID: <+pipeline.variables.project_id>
+                      APP_NAME: <+pipeline.variables.app_name>
+                      OWNER_EMAIL: <+pipeline.triggeredBy.email>
+                      TEMPLATE_REF: <+pipeline.variables.template_ref>
+                      TEMPLATE_VERSION: <+pipeline.variables.template_version>
+                      DEPLOYMENT_TYPE: <+pipeline.variables.deployment_type>
+                      APP_REPO: <+pipeline.variables.app_repo>
+                      APP_GIT_CONNECTOR: <+pipeline.variables.app_git_connector>
+                      MANIFEST_PATH: <+pipeline.variables.manifest_path>
+                      REGISTRY_CONNECTOR: <+pipeline.variables.registry_connector>
+                      IMAGE_PATH: <+pipeline.variables.image_path>
+                      ENVIRONMENTS: <+pipeline.variables.environments>
+                      INPUT_OVERRIDES: <+pipeline.variables.input_overrides>
+                      CREATE_TRIGGER: <+pipeline.variables.create_trigger>
+                      TRIGGER_BRANCH: <+pipeline.variables.trigger_branch>
+                      GITX_CONNECTOR: <+pipeline.variables.gitx_connector>
+                      GITX_REPO: <+pipeline.variables.gitx_repo>
+                      GITX_BRANCH: <+pipeline.variables.gitx_branch>
+                      REPORT_PATH: onboarding-report.json
+                    command: |-
+                      PY=$(command -v python3 || command -v python)
+                      "$PY" onboarding/onboard.py plan
               - step:
-                  type: Queue
-                  name: Queue per project
-                  identifier: queue_project_propose
-                  timeout: 1h
+                  type: Run
+                  name: Open onboarding PR
+                  identifier: open_pr
+                  when:
+                    stageStatus: Success
+                    condition: <+pipeline.variables.dry_run> == "false"
                   spec:
-                    key: app-onboarding__<+pipeline.variables.org_id>__<+pipeline.variables.project_id>
-                    scope: Pipeline
-              - stepGroup:
-                  name: Propose
-                  identifier: propose_sg
-                  stepGroupInfra:
-                    type: KubernetesDirect
-                    spec:
-                      connectorRef: account.k8s_build_cluster
-                      namespace: harness-builds
-                      os: Linux
-                  steps:
-                    - step:
-                        type: GitClone
-                        name: Clone onboarding engine
-                        identifier: clone_engine
-                        timeout: 5m
-                        spec:
-                          connectorRef: <+pipeline.variables.engine_connector>
-                          repoName: <+pipeline.variables.engine_repo>
-                          build:
-                            type: branch
-                            spec:
-                              branch: <+pipeline.variables.engine_branch>
-                    - step:
-                        type: Run
-                        name: Open onboarding PR
-                        identifier: open_pr
-                        timeout: 15m
-                        spec:
-                          connectorRef: account.docker_registry
-                          image: python:3.12-slim
-                          shell: Sh
-                          envVariables:
-                            HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
-                            HARNESS_ACCOUNT_ID: <+account.identifier>
-                            HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
-                            ORG_ID: <+pipeline.variables.org_id>
-                            PROJECT_ID: <+pipeline.variables.project_id>
-                            APP_NAME: <+pipeline.variables.app_name>
-                            OWNER_EMAIL: <+pipeline.triggeredBy.email>
-                            TEMPLATE_REF: <+pipeline.variables.template_ref>
-                            TEMPLATE_VERSION: <+pipeline.variables.template_version>
-                            DEPLOYMENT_TYPE: <+pipeline.variables.deployment_type>
-                            APP_REPO: <+pipeline.variables.app_repo>
-                            APP_GIT_CONNECTOR: <+pipeline.variables.app_git_connector>
-                            MANIFEST_PATH: <+pipeline.variables.manifest_path>
-                            REGISTRY_CONNECTOR: <+pipeline.variables.registry_connector>
-                            IMAGE_PATH: <+pipeline.variables.image_path>
-                            ENVIRONMENTS: <+pipeline.variables.environments>
-                            INPUT_OVERRIDES: <+pipeline.variables.input_overrides>
-                            CREATE_TRIGGER: <+pipeline.variables.create_trigger>
-                            TRIGGER_BRANCH: <+pipeline.variables.trigger_branch>
-                            GITX_CONNECTOR: <+pipeline.variables.gitx_connector>
-                            GITX_REPO: <+pipeline.variables.gitx_repo>
-                            GITX_BRANCH: <+pipeline.variables.gitx_branch>
-                            GITHUB_TOKEN: <+pipeline.variables.github_token>
-                            GITHUB_OWNER: <+pipeline.variables.github_owner>
-                            GITHUB_API_URL: <+pipeline.variables.github_api_url>
-                          command: python3 /harness/<+pipeline.variables.engine_repo>/onboarding/onboard.py propose
-        failureStrategies:
-          - onFailure:
-              errors:
-                - AllErrors
-              action:
-                type: Abort
+                    shell: Sh
+                    envVariables:
+                      HARNESS_BASE_URL: <+pipeline.variables.harness_base_url>
+                      HARNESS_ACCOUNT_ID: <+account.identifier>
+                      HARNESS_API_KEY: <+pipeline.variables.harness_api_key>
+                      ORG_ID: <+pipeline.variables.org_id>
+                      PROJECT_ID: <+pipeline.variables.project_id>
+                      APP_NAME: <+pipeline.variables.app_name>
+                      OWNER_EMAIL: <+pipeline.triggeredBy.email>
+                      TEMPLATE_REF: <+pipeline.variables.template_ref>
+                      TEMPLATE_VERSION: <+pipeline.variables.template_version>
+                      DEPLOYMENT_TYPE: <+pipeline.variables.deployment_type>
+                      APP_REPO: <+pipeline.variables.app_repo>
+                      APP_GIT_CONNECTOR: <+pipeline.variables.app_git_connector>
+                      MANIFEST_PATH: <+pipeline.variables.manifest_path>
+                      REGISTRY_CONNECTOR: <+pipeline.variables.registry_connector>
+                      IMAGE_PATH: <+pipeline.variables.image_path>
+                      ENVIRONMENTS: <+pipeline.variables.environments>
+                      INPUT_OVERRIDES: <+pipeline.variables.input_overrides>
+                      CREATE_TRIGGER: <+pipeline.variables.create_trigger>
+                      TRIGGER_BRANCH: <+pipeline.variables.trigger_branch>
+                      GITX_CONNECTOR: <+pipeline.variables.gitx_connector>
+                      GITX_REPO: <+pipeline.variables.gitx_repo>
+                      GITX_BRANCH: <+pipeline.variables.gitx_branch>
+                      GITHUB_TOKEN: <+pipeline.variables.github_token>
+                      GITHUB_OWNER: <+pipeline.variables.github_owner>
+                      GITHUB_API_URL: <+pipeline.variables.github_api_url>
+                      REPORT_PATH: onboarding-report.json
+                    command: |-
+                      PY=$(command -v python3 || command -v python)
+                      "$PY" onboarding/onboard.py propose
+        variables:
+          - name: HARNESS_CI_INTERNAL_ROUTE_TO_RUNNER
+            type: String
+            description: ""
+            required: false
+            value: "true"
+          - name: HARNESS_CI_INTERNAL_CONTAINERLESS
+            type: String
+            description: ""
+            required: false
+            value: "true"
+        delegateSelectors:
+          - linux-delegate
+  properties:
+    ci:
+      codebase:
+        connectorRef: harnesstesting
+        repoName: harness-docs
+        build: <+input>
+        sparseCheckout: []
   variables:
-    # ---- What the app team fills in ------------------------------------------------
     - name: project_id
       type: String
-      description: Your existing Harness project identifier. The project must exist before onboarding.
+      description: Existing Harness project to onboard into. The project must exist before onboarding.
       required: true
-      value: <+input>.regex(^[a-zA-Z_][0-9a-zA-Z_]{0,127}$)
+      value: <+input>.default(testproj)
     - name: app_name
       type: String
       description: Application / service name. The service id, pipeline id and input set ids are derived from it.
@@ -224,7 +166,7 @@ pipeline:
       value: <+input>
     - name: environments
       type: String
-      description: Comma-separated org environments, one input set each, e.g. dev,prod.
+      description: Comma-separated environments, one input set each, e.g. dev,prod. Unprefixed ids are org-scoped.
       required: true
       value: <+input>.default(dev)
     - name: input_overrides
@@ -246,33 +188,23 @@ pipeline:
       description: true = plan only, nothing written. false = plan, then push the branch and open the PR.
       required: true
       value: <+input>.default(true).allowedValues(true,false)
-    # ---- Platform defaults (fixed for app teams) ---------------------------------
     - name: org_id
       type: String
-      value: default
+      value: testprameet
     - name: app_git_connector
       type: String
-      value: account.github
+      value: harnesstesting
     - name: registry_connector
       type: String
-      value: account.docker_registry
+      value: account.harnessImage
     - name: gitx_connector
       type: String
-      description: Connector Harness uses to commit the generated entity YAML.
-      value: account.github
+      description: Connector the onboarded entities are imported through.
+      value: harnesstesting
     - name: gitx_repo
       type: String
       value: harness-docs
     - name: gitx_branch
-      type: String
-      value: main
-    - name: engine_connector
-      type: String
-      value: account.github
-    - name: engine_repo
-      type: String
-      value: harness-docs
-    - name: engine_branch
       type: String
       value: main
     - name: github_owner
@@ -287,9 +219,9 @@ pipeline:
       value: https://app.harness.io/gateway
     - name: harness_api_key
       type: Secret
-      description: Service-account API key. Here it only reads (preflight); app_team_onboarding_register needs create rights.
-      value: account.harness_api_key
+      description: Harness API key. This pipeline only reads with it; app_team_onboarding_register needs create rights.
+      value: harness_api_key
     - name: github_token
       type: Secret
-      description: GitHub Enterprise token with contents and pull-request write on harness-docs.
-      value: account.github_pat
+      description: GitHub token with contents and pull-request write on the GitX repo.
+      value: github_pat
